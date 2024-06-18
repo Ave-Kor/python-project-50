@@ -11,10 +11,13 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pyyaml = "^6.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
+pytest = "^8.0.0"
+pytest-cov = "^4.1.0"
 
 
 [build-system]
@@ -23,4 +26,4 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry.scripts]
-gendiff = "gendiff.scripts.gendiff:main"
+gendiff = "gendiff.scripts.cli:main"
