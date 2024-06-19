@@ -1,12 +1,18 @@
-import argparse
+import json
+import yaml
 
 
-def parse():
-    parser = argparse.ArgumentParser(
-        description='Compares two configuration files and shows a difference.'
-    )
-    parser.add_argument('first_file', metavar='first_file')
-    parser.add_argument('second_file', metavar='second_file')
-    parser.add_argument('-f', '--format', metavar='FORMAT',
-                        help='set format of output', default='stylish')
-    return parser.parse_args()
+def read(path):
+    with open(path) as file:
+        return file.read()
+
+
+def get_file_format(file_name):
+    return file_name.split('.')[-1]
+
+
+def parse(data, orig_format) -> dict:
+    if orig_format == 'json':
+        return json.loads(data)
+    elif orig_format in ('yaml', 'yml'):
+        return yaml.safe_load(data)

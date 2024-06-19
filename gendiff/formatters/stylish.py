@@ -1,62 +1,50 @@
-ADD, DEL, DEF = '  + ', '  - ', '    '
+import itertools
 
 
-def to_str(key, value, depth):
-    if value is None:
-        return f'{key}: null'
-    elif type(value) is bool:
-        return f'{key}: {str(value).lower()}'
-    elif type(value) is dict:
-        lines = [f'{key}: {{']
-        for item in value.items():
-            lines.append(
-                DEF * (depth + 1) + to_str(
-                    item[0], item[1], depth + 1))
-        lines.append((DEF * (depth)) + '}')
-        return '\n'.join(lines)
+def format_value_stylish(value, depth, replacer=' ', space_counts=4):
+    if isinstance(value, dict):
+        line = []
+        for k, v in value.items():
+            indent = replacer * space_counts * (depth + 1)
+            line.append(f'\n{indent}{k}: {format_value_stylish(v, depth + 1)}')
+        result = itertools.chain('{', line, '\n', ['    ' * depth, '}'])
+        return ''.join(result)
     else:
-        return f'{key}: {str(value)}'
+        if value is None:
+            return 'null'
+        elif isinstance(value, bool):
+            return str(value).lower()
+        return str(value)
 
 
-def standard_formatter(diff):
-    def making_indents(current_diff, depth=1):
+def build_line(data, key, depth, prefix='  '):
+    line = (f'{"  "  * depth}{prefix}{data["key"]}:'
+            f' {format_value_stylish(data[key], depth + 1)}')
+    return line
+
+
+def make_stylish(dict_to_style: dict, replacer=' ', space_counts=2):  # noqa
+
+    def walk(data, depth=0):
+        indent = replacer * space_counts * (depth + 1)
+        indent_for_changed = indent * space_counts
         lines = []
-        for diff_unit in current_diff:
-            status = diff_unit['status']
-            match status:
-                case 'added':
-                    lines.append(
-                        (DEF * (depth - 1) + ADD) + to_str(
-                            diff_unit['name'], diff_unit['what_added'],
-                            depth
-                        ))
-                case 'deleted':
-                    lines.append(
-                        (DEF * (depth - 1) + DEL) + to_str(
-                            diff_unit['name'], diff_unit['what_deleted'],
-                            depth
-                        ))
-                case 'unchanged':
-                    lines.append(
-                        (DEF * depth) + to_str(
-                            diff_unit['name'], diff_unit['intact'],
-                            depth
-                        ))
-                case 'changed':
-                    lines.append(
-                        (DEF * (depth - 1) + DEL) + to_str(
-                            diff_unit['name'], diff_unit['from_first_dict'],
-                            depth
-                        ))
-                    lines.append(
-                        (DEF * (depth - 1) + ADD) + to_str(
-                            diff_unit['name'], diff_unit['from_second_dict'],
-                            depth
-                        ))
-                case 'nested':
-                    nested = making_indents(diff_unit['children'], depth + 1)
-                    lines.append(
-                        f'{DEF * depth}{diff_unit["name"]}: {nested}')
-        output = '{\n' + '\n'.join(lines) + f"\n{(DEF * (depth - 1))}}}"
-        return output
-    return making_indents(diff)
+        for k, v in data.items():
+            if v['vertex_type'] == 'nested':
+                lines.append(f'{indent_for_changed}'
+                             f'{k}: {walk(v["value"], depth + 1)}')
+            elif v['vertex_type'] == 'unchanged':
+                lines.append(f'{indent}{build_line(v, "value", depth)}')
+            elif v['vertex_type'] == 'changed':
+                lines.append(f'{indent}'
+                             f'{build_line(v, "value_old", depth, "- ")}')
+                lines.append(f'{indent}'
+                             f'{build_line(v, "value_new", depth, "+ ")}')
+            elif v['vertex_type'] == 'added':
+                lines.append(f'{indent}{build_line(v, "value", depth, "+ ")}')
+            elif v['vertex_type'] == 'removed':
+                lines.append(f'{indent}{build_line(v, "value", depth, "- ")}')
+        result = itertools.chain("{", lines, ['    ' * depth + "}"])
+        return '\n'.join(result)
+
+    return walk(dict_to_style, 0)

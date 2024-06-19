@@ -1,33 +1,30 @@
-def to_str(item):
-    if item is None:
-        return 'null'
-    elif type(item) is bool:
-        return str(item).lower()
-    elif type(item) is str:
-        return f"'{str(item)}'"
-    elif type(item) is dict:
-        return '[complex value]'
+def format_value_plain(value):
+    if not isinstance(value, dict):
+        if value is None:
+            return 'null'
+        elif isinstance(value, str):
+            return f"'{value}'"
+        else:
+            return str(value).lower()
     else:
-        return str(item)
+        return '[complex value]'
 
 
-def plain_formatter(diff, cur_name=''):
-    output = ''
-    for diff_unit in diff:
-        status = diff_unit['status']
-        name = cur_name + diff_unit['name']
-        match status:
-            case 'added':
-                output += f"Property '{name}' "
-                output += "was added with value: "
-                output += f"{to_str(diff_unit['what_added'])}\n"
-            case 'deleted':
-                output += f"Property '{name}' was removed\n"
-            case 'changed':
-                output += f"Property '{name}' was updated. "
-                output += f"From {to_str(diff_unit['from_first_dict'])} to "
-                output += f"{to_str(diff_unit['from_second_dict'])}\n"
-            case 'nested':
-                output += plain_formatter(diff_unit['children'],
-                                          name + '.')
-    return output
+def make_plain(data: dict, path=""):
+    lines = []
+    for k, v in data.items():
+        current_path = path + v['key'] + '.'
+        if v['vertex_type'] == 'nested':
+            lines.append(f'{make_plain(v["value"], current_path)}')
+        elif v['vertex_type'] == 'changed':
+            lines.append(f"Property '{path}{k}' was updated. "
+                         f"From {format_value_plain(v['value_old'])}"
+                         f" to {format_value_plain(v['value_new'])}")
+        if v['vertex_type'] == 'added':
+            lines.append(f"Property '{path}{k}'"
+                         f" was added with value:"
+                         f" {format_value_plain(v['value'])}")
+        elif v['vertex_type'] == 'removed':
+            lines.append(f"Property '{path}{k}' was removed")
+
+    return '\n'.join(lines)
