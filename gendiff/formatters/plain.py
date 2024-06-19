@@ -28,3 +28,7 @@ def make_plain(data: dict, path=""):
             lines.append(f"Property '{path}{k}' was removed")
 
     return '\n'.join(lines)
+
+
+def plain_formatter(diff):
+    return make_plain(diff)

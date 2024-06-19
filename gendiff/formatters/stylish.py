@@ -48,3 +48,7 @@ def make_stylish(dict_to_style: dict, replacer=' ', space_counts=2):  # noqa
         return '\n'.join(result)
 
     return walk(dict_to_style, 0)
+
+
+def standard_formatter(diff):
+    return make_stylish(diff)
