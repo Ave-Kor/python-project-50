@@ -29,6 +29,3 @@ def make_plain(data: dict, path=""):
 
     return '\n'.join(lines)
 
-
-def plain_formatter(diff):
-    return make_plain(diff)
