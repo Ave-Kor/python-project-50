@@ -1,4 +1,4 @@
-from gendiff import generate_diff
+from gendiff.gen_diff import generate_diff
 from gendiff.parser import read
 import pytest
 import os
@@ -19,7 +19,7 @@ PLAIN_EXPECTED_RESULT = read(get_path('plain_result.txt'))
 JSON_EXPECTED_RESULT = read(get_path('json_result.txt'))
 
 
-@pytest.mark.parametrize('gen_diff, result',
+@pytest.mark.parametrize('generate_diff, result',
                          [
                              (generate_diff(FILE1_JSON_PATH, FILE2_JSON_PATH), STYLISH_EXPECTED_RESULT),
                              (generate_diff(FILE1_YAML_PATH, FILE2_YAML_PATH), STYLISH_EXPECTED_RESULT),
@@ -28,5 +28,5 @@ JSON_EXPECTED_RESULT = read(get_path('json_result.txt'))
                              (generate_diff(FILE1_JSON_PATH, FILE2_JSON_PATH, 'json'), JSON_EXPECTED_RESULT),
                              (generate_diff(FILE1_YAML_PATH, FILE2_YAML_PATH, 'json'), JSON_EXPECTED_RESULT),
                          ])
-def test_generation_diff(gen_diff, result):
-    assert gen_diff == result
+def test_generation_diff(generate_diff, result):
+    assert generate_diff == result
